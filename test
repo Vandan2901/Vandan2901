@@ -1,0 +1,114 @@
+import subprocess
+import platform
+import re
+import psutil
+import speedtest
+
+def run_command(command):
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode == 0:
+        return result.stdout.strip()
+    else:
+        return result.stderr.strip()
+
+def get_installed_software():
+    if platform.system() == "Windows":
+        command = "wmic product get name"
+        return run_command(command)
+    else:
+        return "Unsupported Operating System"
+
+def get_internet_speed():
+    st = speedtest.Speedtest()
+    download_speed = st.download() / 10**6  # Convert to Mbps
+    upload_speed = st.upload() / 10**6  # Convert to Mbps
+    return f"Download Speed: {download_speed:.2f} Mbps, Upload Speed: {upload_speed:.2f} Mbps"
+
+def get_screen_resolution():
+    if platform.system() == "Windows":
+        command = "wmic desktopmonitor get screenwidth,screenheight"
+        result = run_command(command)
+        match = re.search(r'(\d+)\s+(\d+)', result)
+        if match:
+            width, height = match.groups()
+            return f"Screen Resolution: {width}x{height}"
+        else:
+            return "Failed to fetch screen resolution"
+    else:
+        return "Unsupported Operating System"
+
+def get_cpu_info():
+    cpu_info = {
+        "Model": platform.processor(),
+        "Cores": psutil.cpu_count(logical=False),
+        "Threads": psutil.cpu_count(logical=True)
+    }
+    return cpu_info
+
+def get_gpu_info():
+    if platform.system() == "Windows":
+        command = "wmic path win32_videocontroller get caption"
+        result = run_command(command)
+        return result
+    else:
+        return "Unsupported Operating System"
+
+def get_ram_size():
+    ram_info = psutil.virtual_memory()
+    return f"RAM Size: {ram_info.total // (1024**3)} GB"
+
+def get_screen_size():
+    return "Screen Size: Not available (Please provide specific command for this information)"
+
+def get_network_info():
+    mac_address = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
+    return f"MAC Address: {mac_address}"
+
+def get_public_ip():
+    if platform.system() == "Windows":
+        command = "nslookup myip.opendns.com resolver1.opendns.com"
+        result = run_command(command)
+        ip_match = re.search(r'\d+\.\d+\.\d+\.\d+', result)
+        if ip_match:
+            return f"Public IP Address: {ip_match.group()}"
+        else:
+            return "Failed to fetch public IP address"
+    else:
+        return "Unsupported Operating System"
+
+def get_windows_version():
+    return f"Windows Version: {platform.version()}"
+
+def main():
+    print("Installed Software:")
+    print(get_installed_software())
+
+    print("\nInternet Speed:")
+    print(get_internet_speed())
+
+    print("\nScreen Resolution:")
+    print(get_screen_resolution())
+
+    print("\nCPU Info:")
+    print(get_cpu_info())
+
+    print("\nGPU Info:")
+    print(get_gpu_info())
+
+    print("\nRAM Info:")
+    print(get_ram_size())
+
+    print("\nScreen Size:")
+    print(get_screen_size())
+
+    print("\nNetwork Info:")
+    print(get_network_info())
+
+    print("\nPublic IP Address:")
+    print(get_public_ip())
+
+    print("\nWindows Version:")
+    print(get_windows_version())
+
+if __name__ == "__main__":
+    main()
